@@ -17,7 +17,8 @@ CDN的全称是Content Delivery Network，即内容分发网络。
 在 include/proto.h 中定义了三个结构体。包括频道包和节目单包，节目单包中的内容是一个 msg_lisentry_st 结构体的数组。
 一个节目单包如下图所示，为了能将节目单中各个频道的内容区分开，在 msg_lisentry_st 结构体中需要定义一个len来记录每个频道内容的长度(类似于TCP的粘包问题)。
 
-![netradio 包 ](netradio/README.assets/netradio 包 .png)
+![netradio 包 ](README.assets/netradio 包 .png)
+
 
 ## 二、客户端的搭建
 
