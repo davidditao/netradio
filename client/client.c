@@ -12,7 +12,9 @@
 #include <proto.h>
 #include "client.h"
 
-struct client_conf_st client_conf = {.rcvport = DEFAULT_RCVPORT, .mgroup = DEFAULT_MGROUP, .player_cmd = DEFAULT_PLAYERCMD}; // 默认的参数
+struct client_conf_st client_conf = {.rcvport = DEFAULT_RCVPORT,\
+					.mgroup = DEFAULT_MGROUP,\
+					.player_cmd = DEFAULT_PLAYERCMD}; // 默认的参数
 
 static void printhelp(void){
 	printf("命令行的参数：\n");
@@ -104,12 +106,12 @@ int main(int argc, char **argv){
 		exit(1);
 	}
 	
-	// 
+	// 设置多播
 	inet_pton(AF_INET, client_conf.mgroup, &mreq.imr_multiaddr);
 	/* if error */
 	inet_pton(AF_INET, "0.0.0.0", &mreq.imr_address);
 	mreq.imr_ifindex = if_nametoindex("eth0");
-	//
+	// 加入多播组
 	if(setsockopt(sd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0){
 		perror("setsockopt()");
 		exit(1);
@@ -156,8 +158,8 @@ int main(int argc, char **argv){
 		exit(1);
 	} else {			// 父进程，从网络上收包，发送给子进程
 		// 收节目单包
-		struct msg_list_st *msg_list;
-		msg_list = malloc(MSG_LIST_MAX);
+		struct msg_list_st *msg_list;		// 因为包的大小不确定，所以定义一个指针
+		msg_list = malloc(MSG_LIST_MAX);	// 指针指向的空间的大小为最大包的大小
 		if(msg_list == NULL){
 			perror("malloc()");
 			exit(1);
