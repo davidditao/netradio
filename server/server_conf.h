@@ -1,23 +1,23 @@
 #ifndef SERVER_CONF_H__
 #define SSERVER_CONF_H__
 
-#define DEFAULT_MEDIADIR        "/var/media"    // Ä¬ÈÏÃ½Ìå¿â
-#define DEFAULT_IF              "eth0"          // Ä¬ÈÏÍø¿¨
+#define DEFAULT_MEDIADIR        "/var/media"    // é»˜è®¤åª’ä½“åº“
+#define DEFAULT_IF              "eth0"          // é»˜è®¤ç½‘å¡
 
 enum{
-    RUN_DEAMON = 1,         // ºóÌ¨ÔËĞĞ£¨ÊØ»¤½ø³Ì£©
-    RUN_FOREGROUND          // Ç°Ì¨ÔËĞĞ
+    RUN_DEAMON = 1,         // åå°è¿è¡Œï¼ˆå®ˆæŠ¤è¿›ç¨‹ï¼‰
+    RUN_FOREGROUND          // å‰å°è¿è¡Œ
 };
 
-struct server_conf_st{              // ·şÎñÆ÷ÅäÖÃ
-    char *rcvport;      // ½ÓÊÕ¶Ë¿Ú
-    char *mgroup;       // ¶à²¥×é
-    char *media_dir;    // Ã½Ìå¿â
-    char runmode;       // Ç°Ì¨»òºóÌ¨ÔËĞĞ
-    char *ifname;       // Íø¿¨
+struct server_conf_st{              // æœåŠ¡å™¨é…ç½®
+    char *rcvport;      // æ¥æ”¶ç«¯å£
+    char *mgroup;       // å¤šæ’­ç»„
+    char *media_dir;    // åª’ä½“åº“
+    char runmode;       // å‰å°æˆ–åå°è¿è¡Œ
+    char *ifname;       // ç½‘å¡
 
 };
 
-extern struct server_conf_st server_conf;   // ½«server_confÉèÖÃÎªÍâ²¿±äÁ¿
+extern struct server_conf_st server_conf;   // å°†server_confè®¾ç½®ä¸ºå¤–éƒ¨å˜é‡
 
-#endif SSERVER_CONF_H__
+#endif
