@@ -5,30 +5,30 @@
 
 #inlcude "server_conf.h"
 
-// -M       Ö¸¶¨¶à²¥×é
-// -P       Ö¸¶¨½ÓÊÕ¶Ë¿Ú
-// -F       Ç°Ì¨ÔËĞĞ
-// -D       Ö¸¶¨Ã½Ìå¿âÎ»ÖÃ
-// -I       Ö¸¶¨ÍøÂçÉè±¸/Íø¿¨
-// -H       ÏÔÊ¾°ïÖú
+// -M       æŒ‡å®šå¤šæ’­ç»„
+// -P       æŒ‡å®šæ¥æ”¶ç«¯å£
+// -F       å‰å°è¿è¡Œ
+// -D       æŒ‡å®šåª’ä½“åº“ä½ç½®
+// -I       æŒ‡å®šç½‘ç»œè®¾å¤‡/ç½‘å¡
+// -H       æ˜¾ç¤ºå¸®åŠ©
 
 struct server_conf_st server_conf = {.rcvport = DEFAULT_RCVPORT,\
                                     .mgroup = DEFAULT_MGROUP,\
                                     .media_dir = DEFAULT_MEDIADIR,\
                                     .runmode = RUN_DAEMON,\
-                                    .ifname = DEFAULT_IF};  // ³õÊ¼»¯Ä¬ÈÏÖµ
+                                    .ifname = DEFAULT_IF};  // åˆå§‹åŒ–é»˜è®¤å€¼
 
 void printfhelp(void){
-    printf("-M       Ö¸¶¨¶à²¥×é\n");
-    printf("-P       Ö¸¶¨½ÓÊÕ¶Ë¿Ú\n");
-    printf("-F       Ç°Ì¨ÔËĞĞ\n");
-    printf("-D       Ö¸¶¨Ã½Ìå¿âÎ»ÖÃ\n");
-    printf("-I       Ö¸¶¨ÍøÂçÉè±¸/Íø¿¨\n");
-    printf("-H       ÏÔÊ¾°ïÖú\n");
+    printf("-M       æŒ‡å®šå¤šæ’­ç»„\n");
+    printf("-P       æŒ‡å®šæ¥æ”¶ç«¯å£\n");
+    printf("-F       å‰å°è¿è¡Œ\n");
+    printf("-D       æŒ‡å®šåª’ä½“åº“ä½ç½®\n");
+    printf("-I       æŒ‡å®šç½‘ç»œè®¾å¤‡/ç½‘å¡\n");
+    printf("-H       æ˜¾ç¤ºå¸®åŠ©\n");
 }
 
 int main(int argc, char *argv){
-    // ÃüÁîĞĞ·ÖÎö
+    // å‘½ä»¤è¡Œåˆ†æ
     while(1){
         c = getopt(argc, argv, "M:P:FD:I:H");
         if(c < 0){
@@ -60,15 +60,15 @@ int main(int argc, char *argv){
         }
     }
 
-    // ÊØ»¤½ø³ÌµÄÊµÏÖ
+    // å®ˆæŠ¤è¿›ç¨‹çš„å®ç°
 
-    // socket³õÊ¼»¯
+    // socketåˆå§‹åŒ–
 
-    // »ñÈ¡ÆµµÀĞÅÏ¢
+    // è·å–é¢‘é“ä¿¡æ¯
 
-    // ´´½¨½ÚÄ¿µ¥Ïß³Ì
+    // åˆ›å»ºèŠ‚ç›®å•çº¿ç¨‹
 
-    // ´´½¨ÆµµÀÏß³Ì
+    // åˆ›å»ºé¢‘é“çº¿ç¨‹
 
     while(1){
         pause();
@@ -76,4 +76,3 @@ int main(int argc, char *argv){
 
     exit(0);
 }
-
