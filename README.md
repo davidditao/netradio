@@ -2,15 +2,6 @@
 
 
 
-==多播==
-
-[(45 封私信 / 80 条消息) 现在直播、录播等平台是通过“组播”的方式下发流量的吗？ - 知乎 (zhihu.com)](https://www.zhihu.com/question/65869123)
-
-CDN的全称是Content Delivery Network，即内容分发网络。
-
-==通信框架图==
-
-
 
 ## 一、包结构
 
@@ -18,6 +9,17 @@ CDN的全称是Content Delivery Network，即内容分发网络。
 一个节目单包如下图所示，为了能将节目单中各个频道的内容区分开，在 msg_lisentry_st 结构体中需要定义一个len来记录每个频道内容的长度(类似于TCP的粘包问题)。
 
 ![netradio](README.assets/netradio.png)
+
+
+
+### ==多播==
+
+[(45 封私信 / 80 条消息) 现在直播、录播等平台是通过“组播”的方式下发流量的吗？ - 知乎 (zhihu.com)](https://www.zhihu.com/question/65869123)
+
+CDN的全称是Content Delivery Network，即内容分发网络。
+
+==通信框架图==
+
 
 
 
@@ -245,10 +247,54 @@ for(pos = msg_list->entry;
 > 在要将数据写到上面提到的文件类型上时，就可以调用 written ，但是仅当事先就知道要接收数据的数量时，才调用 readn 。
 
 
+## 三、服务端框架搭建
+
+### 3.1 server_conf.h
+
+#### 3.1.1 enum
+
+枚举语法定义格式为：
+
+```
+enum 枚举名 {枚举元素1， 枚举元素2，...}
+
+```
+
+第一个枚举元素的默认值为0，后面没有指定值的枚举元素，其值为前一元素加1。
+
+这里将运行模式定义为枚举类型，运行模式为守护进程时，runmode = RUN_DAEMON, 为前台运行时，runmode = RUN_FOREGROUND
+
+#### 3.1.2 extern
+
+结构体 server_conf_st 用来表示服务器中的设置。
+
+由于server文件夹中有多个文件，我们希望在所有的文件中都能访问到服务器的设置，所以在 server_conf.h 中用 extern 关键字声明了 server_conf 这样我们在所有的文件中都可以访问它了。
+
+### 3.2 server.c
+
+#### 3.2.1 服务端框架
+
+1. 命令行分析
+2. 守护进程实现
+3. socket 初始化
+4. 获取频道信息
+5. 创建节目单线程
+6. 创建频道线程
 
 
+## 四、守护进程的实现
+
+### 4.1 设置守护进程
 
 
+### 4.2 系统日志
+
+
+### 4.3 守护进程的结束
+
+使用信号来结束守护进程
+
+signal 会产生重入现象，所以在这里我们使用 sigaction
 
 
 
