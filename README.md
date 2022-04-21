@@ -149,9 +149,74 @@ sd = socket(AF_INET, SOCK_DGRAM, 0);
 
 #### 2.2.5 setsockopt 设置套接字选项
 
+使用 setsockopt 来设置套接字选项
+
+![image-20220419162529186](README.assets/image-20220419162529186.png)
+
++ 参数 level 设置套接字的级别。由于我们使用的是多播，所以级别为 IPPROTO_IP，表示在ip层设置。
+
++ 参数 option 表示选项。我们可以在man手册中查看ip层的 socket 选项。`man 7 ip`
+
+  ![image-20220412151504025](README.assets/image-20220412151504025.png)
+
+  ![image-20220412151716197](README.assets/image-20220412151716197.png)
+
+  ![image-20220412151834155](README.assets/image-20220412151834155.png)
+
+  + IP_ADDMEMBERSHIP 加入一个多播组
+  + IP_DROP_MEMBERSHIP 离开一个多播组
+  + IP_MULTICAST_IF 创建一个多播组
+
+  在客户端我们应该选择加入一个多播组，创建多播组应该交给服务端。
+
++ 参数 val 表示选项需要传入的参数。
+
+  在 man 手册中可以看到，IP_ADDMEMBERSHIP 需要的参数为一个 ip_mreqn 结构体。
+
+  + imr_multiaddr 表示多播组地址。用 inet_pton() 将点分式转换为二进制地址。
+
+  + imr_address 表示自己的地址。这里可以用 0.0.0.0 。
+
+    > 0.0.0.0的地址表示不确定地址,或“所有地址”、“任意地址”。
+    >
+    > 如果你的服务器有多个网卡，而你的服务（不管是在udp端口上侦听，还是在tcp端口上侦听），出于某种原因：可能是你的服务器操作系统可能随时增减IP地址，也有可能是为了省去确定服务器上有什么网络端口（网卡）的麻烦 —— 可以要在调用bind()的时候，告诉操作系统：“我需要在 yyyy 端口上侦听，所以发送到服务器的这个端口，不管是哪个网卡/哪个IP地址接收到的数据，都是我处理的。”这时候，服务器则在0.0.0.0这个地址上进行侦听。
+
+  + imr_ifindex 表示接口索引。可以用 ifconfig 可以查看接口名，用函数 if_nametoindex() 可以将接口名转换为接口索引。 也可以在命令行用 `ip ad sh` 查看接口索引。
+
+```C
+struct ip_mreqn mreq;	// IP_ADD_MEMBERSHIP 选项的参数
+	inet_pton(AF_INET, client_conf.mgroup, &mreq.imr_multiaddr);
+	inet_pton(AF_INET, "0.0.0.0", &mreq.imr_address);
+	mreq.imr_ifindex = if_nametoindex("eth0");
+setsockopt(sd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)); // 设置socket加入多播组
+```
+
+
+
+IP_MULTICAST_LOOP 选项可以设置是否允许组播回送。也就是说发送组播数据的主机是否可以作为接收组播数据的组播成员。
+
+![image-20220419165438667](README.assets/image-20220419165438667.png)
+
 
 
 #### 2.2.6 绑定套接字和地址
+
+由于我们的客户端属于接收方，所以必须设置端口号，用这个端口号来接收数据。而服务端属于发送方，可以不设置端口号，如果没有设置，系统会给分配一个没人用的随机端口，当进程结束前这个端口都留给这个进程使用，不会给他人使用。
+
+![image-20220419165936632](README.assets/image-20220419165936632.png)
+
++ 参数 addr 是一个 sockaddr 类型的结构体。
+
+  man 手册中说明，这里的结构体需要像下面这种形式：
+
+  ![image-20220419170241705](README.assets/image-20220419170241705.png)
+
+  我们通常使用头文件 `<netinet/in.h>` 中的 sockaddr_in 结构体，在 `man 7 ip` 中的介绍：
+
+  ![image-20220419170820490](README.assets/image-20220419170820490.png)
+  + sin_family 总是设置为 AF_INET
+  + sin_port 设置为端口号
+  + sin_addr 设置为主机的ip地址
 
 
 
@@ -199,7 +264,11 @@ recvfrom 与 recv 很类似，区别在于，使用 recvfrom 可以得到发送�
 len = recvfrom(sd, msg_list, MSG_LIST_MAX, 0, (void *)&serveraddr, &serveraddr_len); 
 ```
 
-==**为什么是 `(void *)&serveraddr` ？**==
+**为什么是 `(void *)&serveraddr` ？**
+
+因为第五个参数需要接收一个 (void *) 类型的参数。
+
+==**可不可以写得简单一点？**==
 
 
 
@@ -207,7 +276,11 @@ len = recvfrom(sd, msg_list, MSG_LIST_MAX, 0, (void *)&serveraddr, &serveraddr_l
 
 ##### 2.2.8.2 打印节目单并选择频道
 
-==**这个 for 循环应该怎么写？**==
+**这个 for 循环应该怎么写？**
+
+定义一个pos指针，指针从 msg_list->entry 数组的第一个 msg_listentry_st 结构体开始。每次读一个结构体。读到最后一个结束，也就是 msg_list + len 位置。
+
+由于 pos->len 是从网络中来的数据，所以需要用 ntohs 转换字节序。
 
 ```C
 struct msg_listentry_st *pos;	// 指向节目单中的每个频道的内容结构体
@@ -274,6 +347,8 @@ enum 枚举名 {枚举元素1， 枚举元素2，...}
 
 #### 3.2.1 服务端框架
 
+服务端分为以下几个部分：
+
 1. 命令行分析
 2. 守护进程实现
 3. socket 初始化
@@ -281,20 +356,105 @@ enum 枚举名 {枚举元素1， 枚举元素2，...}
 5. 创建节目单线程
 6. 创建频道线程
 
+下面开始实现这几个部分。
 
 ## 四、守护进程的实现
 
 ### 4.1 设置守护进程
 
+编写 daemonize() 函数将当前进程设置为守护进程。具体操作为：
+
+#### 4.1.1 设置文件权限 umask(0)
+
+因为守护进程继承了父进程的文件权限，而守护进程可能要设置特定的权限，所以我们通过 umask(0) 来设置守护进程的权限，为了不受父进程的 umask 的影响，能自由创建读写文件和目录。
+
+
+
+#### 4.1.2 调用 fork()
+
+调用fork，然后使父进程 exit。这样做实现了下面几点：
+
++ 如果该守护进程是作为一条简单的 shell 命令启动的，那么父进程终止会让 shell 认为这条命令已经执行完毕
++ 用子进程来做守护进程，可以保证子进程不是一个进程组的组长进程。这样做是为了下面调用 setsid 函数的时候不会报错。
+
+
+
+#### 4.1.3 调用 setsid()
+
+调用 setsid() 创建一个会话，这会发生以下3件事：
+
++ 该进程变成新会话的会话首进程。此时，该进程是新会话中的唯一进程。
++ 该进程成为一个新进程组的组长进程。
++ 该进程没有控制终端。
+
+
+
+#### 4.1.4 更改工作目录
+
+将当前工作目录更改为根目录。从父进程继承过来的工作目录可能在一个挂载的文件系统中。因为守护进程通常在系统再引导之前是一直存在的，所以如果守护进程的当前工作目录在一个挂在文件系统中，那么该文件系统就不能被卸载。
+
+```C
+chdir("/");	
+```
+
+
+
+#### 4.1.5 关闭不再需要的文件描述符
+
+使守护进程不再持有从其父进程继承来的任何文件描述符。
+
+
+
+#### 4.1.6 将文件描述符 0,1,2 指向空洞文件
+
+```C
+fd = open("/dev/null/", O_RDWR);
+if(fd < 0){
+    syslog(LOG_WARNING, "open():%s", strerror(errno));
+    return -2;
+} else {
+    dup2(fd, 0);
+    dup2(fd, 1);
+    dup2(fd, 2);
+
+    if(fd > 2){
+        close(fd);
+    }
+}
+```
+
+
 
 ### 4.2 系统日志
 
+由于守护进程是脱离终端的，所以不能将出错的消息写到标准错误上。所以出错的消息需要记录在系统日志中。
+
+![image-20220421171535853](README.assets/image-20220421171535853.png)
+
++ `openlog()` ：指定一个 ident 字段（指定人物，随便写），此ident 将被加至每则日志消息中。option 一般用 LOG_PID。facility 是消息来源。
+
++ `syslog()` ：产生一个日志消息。priority 是 facility 和 level 的组合。下面是 facility 参数 和 level 参数的部分说明。format 指的是要写入日志的内容，类似与 printf 的用法。**但是 `\n` 这类格式控制符是无效的，因为系统日志的格式是由 syslogd 服务来控制的。** 
+
++ `closelog()`： 关闭曾被用于与 syslogd 守护进程进行通信的描述符。
+
+![image-20220322093842693](README.assets/image-20220322093842693.png)
 
 ### 4.3 守护进程的结束
 
-使用信号来结束守护进程
+我们可以用信号来使守护进程正常终止，在信号处理函数中，我们还可以释放我们使用的资源，如关闭系统日志。
 
-signal 会产生重入现象，所以在这里我们使用 sigaction
+signal 会产生重入现象，所以在这里我们使用 sigaction，sigaction 可以指定，在执行信号处理函数的时候，不希望被哪些信号打断。
+
+![image-20220421172604812](README.assets/image-20220421172604812.png)
+
+其中 sigaction 结构体为：
+
+![image-20220421172708504](README.assets/image-20220421172708504.png)
+
++ sa_handler ：信号处理函数，只有一个参数，参数为该信号对应的编码。 
++ sa_mask ：一个信号集，里面有需要阻塞的信号。利用 sigaddset() 函数将信号加入信号集。
++ sa_flags ：表示要对这个信号进行什么处理。
++ sa_sigaction ：信号处理函数，有三个参数。这个字段和 sa_handler 字段只能使用其中一个。
 
 
 
